@@ -28,48 +28,54 @@ been tested end to end**. The helper script is the same one I use.
 Adobe Lightroom Classic, with a catalog whose keywords you want Claude to choose from. The
 skill was developed and used on macOS. Back up the catalog before the first run.
 
-### 2. A patched Lightroom MCP server
+### 2. The Lightroom MCP server, new enough
 
 The skill talks to Lightroom through
 [Automaat/lightroom-mcp](https://github.com/Automaat/lightroom-mcp), an MCP server with a
 Lua plug-in that runs inside Lightroom Classic.
 
-**The stock server is not enough, and must not be used with this skill.** Its
-`set_keywords` tool creates every keyword at the top level, so in a catalog with a keyword
-hierarchy it would create duplicates beside your nested keywords. The skill checks for this
-and stops.
+It needs three things that were added to that server in October 2026:
 
-The skill needs three additions to that server. They are being proposed upstream from the
-fork [tellytart/lightroom-mcp](https://github.com/tellytart/lightroom-mcp):
-
-| Addition | Branch on the fork | Status |
+| What the skill needs | Added in | First release with it |
 |---|---|---|
-| `set_keywords` accepts `Parent|Child` paths and `create_missing: false`; `get_photo_metadata` returns `keywordPaths`; new `list_keywords` tool | `hierarchical-keywords` | Pull request open upstream |
-| New `set_gps` tool | `set-gps` | Pull request open upstream |
-| New `export_photo_metadata` tool | not published yet | Waiting for the first pull request to be merged |
+| `set_keywords` with `Parent|Child` paths and `create_missing: false`; `keywordPaths` in `get_photo_metadata`; the `list_keywords` tool | [#246](https://github.com/Automaat/lightroom-mcp/pull/246) | v0.19.0 |
+| The `set_gps` tool | [#247](https://github.com/Automaat/lightroom-mcp/pull/247) | v0.19.0 |
+| The `export_photo_metadata` tool | [#249](https://github.com/Automaat/lightroom-mcp/pull/249) | the release after v0.19.0 |
 
-**Until the third addition is published, the skill cannot be installed from public
-sources.** This README will be updated when it is. Once all three are merged and released
-upstream, the stock server will do.
+**An older server must not be used with this skill.** Before #246, `set_keywords` created
+every keyword at the top level, so in a catalog with a keyword hierarchy it would create
+duplicates beside your nested keywords. The skill checks for the tools above and stops if
+any is missing.
 
-To install the patched build:
+**Installing a release.** If the latest
+[release](https://github.com/Automaat/lightroom-mcp/releases/latest) is newer than
+v0.19.0, follow the project's own README: download the `.mcpb` file, open it with the
+Claude desktop app and install it.
+
+**Building from source.** If the latest release is still v0.19.0, build the current
+`main` branch instead:
 
 1. Install [Node.js](https://nodejs.org) 18 or later.
-2. Get a copy of the server source that has all three additions, then build the bundle
-   from its root:
+2. Build the bundle:
    ```
+   git clone https://github.com/Automaat/lightroom-mcp.git
+   cd lightroom-mcp
    node scripts/build-mcpb.mjs
    ```
    This writes `build/lightroom-mcp.mcpb`.
-3. Install the server: open the `.mcpb` file with the Claude desktop app and choose
-   Install. If you already have the stock Lightroom Classic extension, remove it first.
-4. Install the plug-in. With Lightroom closed, copy `plugin/LightroomMCP.lrplugin` into
-   Lightroom's Modules folder, replacing any copy already there (the server only installs
-   the plug-in when none is present, so it will not replace a stock one for you):
-   - macOS: `~/Library/Application Support/Adobe/Lightroom/Modules/`
-   - Windows: `%APPDATA%\Adobe\Lightroom\Modules\`
-5. Open Lightroom, go to File > Plug-in Manager > Lightroom MCP and press **Start Server**.
-   Tick **Auto-start server on Lightroom launch** to skip this step in future.
+3. Open the `.mcpb` file with the Claude desktop app and choose Install. If an older
+   Lightroom Classic extension is installed, remove it first.
+
+**Updating the plug-in.** The server copies its Lua plug-in into Lightroom only when none
+is there, so an update to the server does not update a plug-in you already have. If you are
+upgrading, close Lightroom and replace `LightroomMCP.lrplugin` in Lightroom's Modules
+folder with the one from the new version (in a source checkout it is under `plugin/`):
+
+- macOS: `~/Library/Application Support/Adobe/Lightroom/Modules/`
+- Windows: `%APPDATA%\Adobe\Lightroom\Modules\`
+
+**Starting it.** Open Lightroom, go to File > Plug-in Manager > Lightroom MCP and press
+**Start Server**. Tick **Auto-start server on Lightroom launch** to skip this in future.
 
 If Claude reports "Lightroom plugin not connected" while the plug-in says it is running,
 press **Stop Server** and then **Start Server**. The plug-in's log is at
@@ -167,8 +173,9 @@ what it found, asks you those questions and writes the file. You can also write 
   selection or filmstrip.
 - Previews are named after the original file, so two selected photos with the same file
   name stem are exported separately.
-- Not yet exercised: selections of more than 1,000 photos, and the parallel route for
-  very large runs described at the end of `SKILL.md`.
+- `export_photo_metadata` handles at most 1,000 photos per call, so larger selections are
+  exported in parts and merged. That route, and the parallel route for very large runs
+  described at the end of `SKILL.md`, have not been exercised yet.
 
 ## `kwtool.py` commands
 

@@ -21,17 +21,16 @@ Only ever change the catalog through the MCP tools. Never touch the `.lrcat` fil
 
 The tools are the Lightroom Classic MCP tools (their names end in `get_selected_photos`,
 `export_photo_metadata`, `export_photos`, `list_keywords`, `set_keywords`, `set_gps`). This
-skill needs a build of the server that has all of them; the skill's README says where to
-get one.
+skill needs a version of the server that has all of them; the skill's README says which.
 
 - Call `get_selected_photos` with `limit: 1`. If it says "Lightroom plugin not connected",
   ask the user to open File › Plug-in Manager › Lightroom MCP and press **Stop Server** then
   **Start Server** (Start alone is ignored when the plug-in wrongly thinks it is running).
   The plug-in's log is `~/Documents/LrClassicLogs/LightroomMCP.log`.
 - If `list_keywords`, `export_photo_metadata` or `set_gps` is missing, or `set_keywords` has
-  no `create_missing` parameter, the stock build is installed. **Stop.** Stock `set_keywords`
-  creates every keyword at the top level and would scatter duplicates through a keyword
-  hierarchy.
+  no `create_missing` parameter, the installed server is too old. **Stop** and tell the user
+  to update it. An old `set_keywords` creates every keyword at the top level and would
+  scatter duplicates through a keyword hierarchy.
 
 ## 2. What gets keyworded
 
@@ -99,6 +98,14 @@ new standing choice, add it to the file.
    scans), `dimensions`, `croppedDimensions`, `gps`, `location`, `title`, `caption` and
    `keywordPaths` (full paths). This file is the **before** state: never overwrite it once
    you have started applying. Never read metadata with `get_photo_metadata` photo by photo.
+   - `destination` must be an absolute path (`~/` is expanded). The call fails if the file
+     already exists; pass `overwrite: true` only to redo an export before anything has
+     been applied.
+   - One call exports at most 1000 photos and refuses a larger selection. For more, page
+     through `get_selected_photos` to collect the IDs into a file in the run folder, export
+     them 1000 at a time with `photo_ids` to `photos.part01.json`, `photos.part02.json`…,
+     and merge the parts into `photos.json` with a short script (concatenate the `photos`
+     arrays and set `count`).
 2. **`kwtool.py prep <run>`**, then read `export.json`.
 3. **Previews.** For each chunk in `export.json`, call `export_photos` with those
    `photo_ids`, `destination` = `<run folder>/previews`, `format: jpeg`, `width: 1200`,
