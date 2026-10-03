@@ -40,31 +40,19 @@ It needs three things that were added to that server in October 2026:
 |---|---|---|
 | `set_keywords` with `Parent|Child` paths and `create_missing: false`; `keywordPaths` in `get_photo_metadata`; the `list_keywords` tool | [#246](https://github.com/Automaat/lightroom-mcp/pull/246) | v0.19.0 |
 | The `set_gps` tool | [#247](https://github.com/Automaat/lightroom-mcp/pull/247) | v0.19.0 |
-| The `export_photo_metadata` tool | [#249](https://github.com/Automaat/lightroom-mcp/pull/249) | the release after v0.19.0 |
+| The `export_photo_metadata` tool | [#249](https://github.com/Automaat/lightroom-mcp/pull/249) | v0.20.0 |
 
 **An older server must not be used with this skill.** Before #246, `set_keywords` created
 every keyword at the top level, so in a catalog with a keyword hierarchy it would create
 duplicates beside your nested keywords. The skill checks for the tools above and stops if
 any is missing.
 
-**Installing a release.** If the latest
-[release](https://github.com/Automaat/lightroom-mcp/releases/latest) is newer than
-v0.19.0, follow the project's own README: download the `.mcpb` file, open it with the
-Claude desktop app and install it.
-
-**Building from source.** If the latest release is still v0.19.0, build the current
-`main` branch instead:
-
-1. Install [Node.js](https://nodejs.org) 18 or later.
-2. Build the bundle:
-   ```
-   git clone https://github.com/Automaat/lightroom-mcp.git
-   cd lightroom-mcp
-   node scripts/build-mcpb.mjs
-   ```
-   This writes `build/lightroom-mcp.mcpb`.
-3. Open the `.mcpb` file with the Claude desktop app and choose Install. If an older
-   Lightroom Classic extension is installed, remove it first.
+**Installing.** You need **v0.20.0 or later**, the first release with all three. Download the
+`.mcpb` file from the
+[latest release](https://github.com/Automaat/lightroom-mcp/releases/latest), open it with the
+Claude desktop app and choose Install. If an older Lightroom Classic extension is installed,
+remove it first. (v0.19.0 has keywords and GPS but not `export_photo_metadata`, so it is not
+enough.)
 
 **Updating the plug-in.** The server copies its Lua plug-in into Lightroom only when none
 is there, so an update to the server does not update a plug-in you already have. If you are
